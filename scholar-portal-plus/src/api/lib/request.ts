@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: process.env.API_URL,
+  baseURL: "http://localhost:3000",
   headers: {
     "Content-Type": "application/json",
   },
@@ -9,10 +9,17 @@ const axiosInstance = axios.create({
 
 const apiRequest = async (method, route, data = null) => {
   try {
+    // Get the JWT token from localStorage (or wherever you store it)
+    const token = localStorage.getItem("token");
+
+    // Prepare headers
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
     const config = {
       method,
       url: route,
       data: method === "POST" || method === "PUT" ? data : null,
+      headers, // Include headers in the config
     };
 
     const response = await axiosInstance(config);

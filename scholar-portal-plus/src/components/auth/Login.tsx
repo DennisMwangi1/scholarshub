@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -9,33 +9,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LockKeyhole, Mail, User } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import TwoFactorAuth from './TwoFactorAuth';
-import { login, verifyOtp, generateQrCodeUrl } from '@/utils/authUtils';
+import { api } from '@/api';
 
-const LoginComponent = () => {
-  const [searchParams] = useSearchParams();
-  const role = searchParams.get('role') || 'student';
+const LoginComponent = ({ role }: { role: 'student' | 'lecturer'; }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showTwoFactor, setShowTwoFactor] = useState(false);
-  const [qrCodeUrl, setQrCodeUrl] = useState('');
   const { toast } = useToast();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
       // Use the authUtils login function
-      const user = await login(email, password);
-      
-      // Generate QR code URL for the authenticated user
-      const qrUrl = generateQrCodeUrl(email);
-      setQrCodeUrl(qrUrl);
-      
-      // Show 2FA component
-      setShowTwoFactor(true);
+      const response = await api.login(email, password, role);
+
+      if (response.mfa_required) {
+        setShowTwoFactor(true);
+      } else {
+        handleTwoFactorSuccess();
+      }
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -54,7 +50,7 @@ const LoginComponent = () => {
     } else {
       navigate('/student-portal');
     }
-    
+
     toast({
       title: "Login successful",
       description: `Welcome to the ${role} portal.`
@@ -62,7 +58,7 @@ const LoginComponent = () => {
   };
 
   if (showTwoFactor) {
-    return <TwoFactorAuth onSuccess={handleTwoFactorSuccess} qrCodeUrl={qrCodeUrl} />;
+    return <TwoFactorAuth onSuccess={handleTwoFactorSuccess} mode='login' userData={{ email, password }} role={role} />;
   }
 
   return (
@@ -88,7 +84,7 @@ const LoginComponent = () => {
               Enter your credentials to access the {role} portal
             </CardDescription>
           </CardHeader>
-          
+
           <Tabs defaultValue={role} value={role}>
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="student" onClick={() => navigate('/login?role=student')}>
@@ -98,7 +94,7 @@ const LoginComponent = () => {
                 Lecturer
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value={role}>
               <form onSubmit={handleSubmit}>
                 <CardContent className="space-y-4">
@@ -106,10 +102,10 @@ const LoginComponent = () => {
                     <Label htmlFor="email">Email</Label>
                     <div className="relative">
                       <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                      <Input 
-                        id="email" 
-                        type="email" 
-                        placeholder="name@scholarportal.edu" 
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="name@scholarportal.edu"
                         className="pl-10"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -117,12 +113,12 @@ const LoginComponent = () => {
                       />
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <Label htmlFor="password">Password</Label>
-                      <a 
-                        href="#" 
+                      <a
+                        href="#"
                         className="text-xs text-school-primary hover:underline"
                       >
                         Forgot password?
@@ -130,9 +126,9 @@ const LoginComponent = () => {
                     </div>
                     <div className="relative">
                       <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
-                      <Input 
-                        id="password" 
-                        type="password" 
+                      <Input
+                        id="password"
+                        type="password"
                         className="pl-10"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
@@ -141,19 +137,19 @@ const LoginComponent = () => {
                     </div>
                   </div>
                 </CardContent>
-                
+
                 <CardFooter className="flex flex-col space-y-4">
-                  <Button 
-                    type="submit" 
+                  <Button
+                    type="submit"
                     className={`w-full ${role === 'lecturer' ? 'bg-school-secondary hover:bg-school-secondary/90' : 'bg-school-primary hover:bg-school-primary/90'}`}
                     disabled={isLoading}
                   >
                     {isLoading ? 'Signing in...' : 'Sign In'}
                   </Button>
-                  
+
                   <div className="text-center text-sm">
                     Don't have an account?{" "}
-                    <a 
+                    <a
                       href={`/register?role=${role}`}
                       className={`font-medium ${role === 'lecturer' ? 'text-school-secondary' : 'text-school-primary'} hover:underline`}
                     >

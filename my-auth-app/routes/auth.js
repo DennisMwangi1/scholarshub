@@ -3,16 +3,16 @@ const bcrypt = require( 'bcrypt' );
 const speakeasy = require( 'speakeasy' );
 const qrcode = require( 'qrcode' );
 const jwt = require( 'jsonwebtoken' );
-const db = require( '../db' );  // Adjust the path based on where your database setup is
+const db = require( '../db' );
+const authMiddleware = require( '../middleware/authMiddleware' );
 const router = express.Router();
 
 const SALT_ROUNDS = 10;
-const JWT_SECRET = 'your_jwt_secret'; // Replace with your actual JWT secret
+const JWT_SECRET = process.env.JWT_SECRET;
 
 
 const createAuthRoutes = ( role, tableName ) =>
 {
-    // Register
     router.post( `/${ role }/register`, async ( req, res ) =>
     {
         const { fullname, email, password } = req.body;
@@ -24,8 +24,8 @@ const createAuthRoutes = ( role, tableName ) =>
             const hashedPassword = await bcrypt.hash( password, SALT_ROUNDS );
             const mfa = speakeasy.generateSecret( { name: `${ role } (${ email })` } );
 
-            const stmt = db.prepare( `INSERT INTO ${ tableName } (fullname, email, password, mfa_secret) VALUES (?, ?, ?, ?)` );
-            stmt.run( fullname, email, hashedPassword, mfa.base32, async function ( err )
+            const stmt = db.prepare( `INSERT INTO ${ tableName } (fullname, email, password, mfa_secret, role) VALUES (?, ?, ?, ?, ?)` );
+            stmt.run( fullname, email, hashedPassword, mfa.base32, role, async function ( err )
             {
                 if ( err )
                 {
@@ -37,7 +37,11 @@ const createAuthRoutes = ( role, tableName ) =>
                 }
 
                 const qr = await qrcode.toDataURL( mfa.otpauth_url );
-                return res.status( 201 ).json( { message: `${ role } registered successfully`, qr } );
+                return res.status( 201 ).json( {
+                    message: `${ role } registered successfully`,
+                    qr,
+                    mfa_required: true
+                } );
             } );
         } catch ( err )
         {
@@ -45,11 +49,13 @@ const createAuthRoutes = ( role, tableName ) =>
         }
     } );
 
+
     // Login
     router.post( `/${ role }/login`, async ( req, res ) =>
     {
         const { email, password, otp } = req.body;
-        if ( !email || !password ) return res.status( 400 ).json( { message: 'Email and password required' } );
+        if ( !email || !password )
+            return res.status( 400 ).json( { message: 'Email and password required' } );
 
         db.get( `SELECT * FROM ${ tableName } WHERE email = ?`, [ email ], async ( err, user ) =>
         {
@@ -59,32 +65,28 @@ const createAuthRoutes = ( role, tableName ) =>
             const passwordMatch = await bcrypt.compare( password, user.password );
             if ( !passwordMatch ) return res.status( 401 ).json( { message: 'Invalid credentials' } );
 
-            // Check if MFA is enabled
             if ( user.mfa_secret )
             {
-                // If OTP is not provided, return a response indicating MFA is required
                 if ( !otp )
                 {
                     return res.status( 206 ).json( {
-                        message: 'OTP required',
-                        mfa: true
+                        message: 'OTP required to complete login',
+                        mfa_required: true
                     } );
                 }
 
-                // Verify OTP
                 const isVerified = speakeasy.totp.verify( {
                     secret: user.mfa_secret,
                     encoding: 'base32',
-                    token: otp
+                    token: otp,
+                    window: 1
                 } );
 
                 if ( !isVerified ) return res.status( 401 ).json( { message: 'Invalid OTP' } );
             }
 
-            // Generate JWT token after successful password (and OTP if necessary) verification
-            const token = jwt.sign( { id: user.id, email: user.email, role }, JWT_SECRET, { expiresIn: '1h' } );
+            const token = jwt.sign( { id: user.id, email: user.email, name: user.fullname, role: user.role }, JWT_SECRET, { expiresIn: '1h' } );
 
-            // Send a successful login response with the token and a success message
             return res.json( {
                 message: 'Login successful',
                 token
@@ -92,9 +94,16 @@ const createAuthRoutes = ( role, tableName ) =>
         } );
     } );
 
+    router.get( '/me', authMiddleware, ( req, res ) =>
+    {
+        res.json( {
+            user: req.user,
+        } );
+    } );
+
+
 };
 
-// Register student and lecturer routes
 createAuthRoutes( 'student', 'students' );
 createAuthRoutes( 'lecturer', 'lecturers' );
 

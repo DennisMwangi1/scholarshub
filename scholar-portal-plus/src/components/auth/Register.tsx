@@ -1,26 +1,32 @@
 
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LockKeyhole, Mail, User, BookUser, BookKey } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { registerUser } from '@/utils/authUtils';
-import { 
+import {
   Form,
   FormControl,
   FormDescription,
   FormField,
   FormItem,
   FormLabel,
-  FormMessage 
+  FormMessage
 } from '@/components/ui/form';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { api } from '@/api';
+import TwoFactorAuth from './TwoFactorAuth';
+
+interface Response {
+  message: string;
+  mfa_required: boolean;
+  qr: string;
+}
 
 const registerSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
@@ -34,12 +40,12 @@ const registerSchema = z.object({
 
 type RegisterFormValues = z.infer<typeof registerSchema>;
 
-const RegisterComponent = () => {
-  const [searchParams] = useSearchParams();
-  const role = searchParams.get('role') || 'student';
+const RegisterComponent = ({ role }: { role: 'student' | 'lecturer'; }) => {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [showTwoFactor, setShowTwoFactor] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState('');
 
   const form = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
@@ -53,21 +59,16 @@ const RegisterComponent = () => {
 
   const onSubmit = async (values: RegisterFormValues) => {
     setIsLoading(true);
-    
+
     try {
-      await registerUser({
-        name: values.name,
-        email: values.email,
-        password: values.password,
-        role: role as 'student' | 'lecturer'
-      });
-      
-      toast({
-        title: "Registration successful",
-        description: "Please login with your new account.",
-      });
-      
-      navigate(`/login?role=${role}`);
+      const response: Response = await api.register(
+        values.name,
+        values.email,
+        values.password,
+        role
+      );
+      setQrCodeUrl(response.qr);
+      setShowTwoFactor(response.mfa_required);
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -78,6 +79,18 @@ const RegisterComponent = () => {
       setIsLoading(false);
     }
   };
+
+  const handleTwoFactorSuccess = () => {
+    navigate(`/login?role=${role}`);
+    toast({
+      title: "MFA setup successful",
+      description: `Login to the ${role}'s portal.`
+    });
+  };
+
+  if (showTwoFactor) {
+    return <TwoFactorAuth onSuccess={handleTwoFactorSuccess} qrCodeUrl={qrCodeUrl} mode='register' role={role} />;
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen">
@@ -102,7 +115,7 @@ const RegisterComponent = () => {
               Create a new account to access the {role} portal
             </CardDescription>
           </CardHeader>
-          
+
           <Tabs defaultValue={role} value={role}>
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="student" onClick={() => navigate('/register?role=student')}>
@@ -112,7 +125,7 @@ const RegisterComponent = () => {
                 Lecturer
               </TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value={role}>
               <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)}>
@@ -126,8 +139,8 @@ const RegisterComponent = () => {
                           <div className="relative">
                             <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                             <FormControl>
-                              <Input 
-                                placeholder="Enter your full name" 
+                              <Input
+                                placeholder="Enter your full name"
                                 className="pl-10"
                                 {...field}
                               />
@@ -137,7 +150,7 @@ const RegisterComponent = () => {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="email"
@@ -147,8 +160,8 @@ const RegisterComponent = () => {
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                             <FormControl>
-                              <Input 
-                                placeholder="name@scholarportal.edu" 
+                              <Input
+                                placeholder="name@scholarportal.edu"
                                 type="email"
                                 className="pl-10"
                                 {...field}
@@ -159,7 +172,7 @@ const RegisterComponent = () => {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="password"
@@ -169,7 +182,7 @@ const RegisterComponent = () => {
                           <div className="relative">
                             <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                             <FormControl>
-                              <Input 
+                              <Input
                                 type="password"
                                 className="pl-10"
                                 {...field}
@@ -183,7 +196,7 @@ const RegisterComponent = () => {
                         </FormItem>
                       )}
                     />
-                    
+
                     <FormField
                       control={form.control}
                       name="confirmPassword"
@@ -193,7 +206,7 @@ const RegisterComponent = () => {
                           <div className="relative">
                             <LockKeyhole className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 h-4 w-4" />
                             <FormControl>
-                              <Input 
+                              <Input
                                 type="password"
                                 className="pl-10"
                                 {...field}
@@ -205,10 +218,10 @@ const RegisterComponent = () => {
                       )}
                     />
                   </CardContent>
-                  
+
                   <CardFooter>
-                    <Button 
-                      type="submit" 
+                    <Button
+                      type="submit"
                       className={`w-full ${role === 'lecturer' ? 'bg-school-secondary hover:bg-school-secondary/90' : 'bg-school-primary hover:bg-school-primary/90'}`}
                       disabled={isLoading}
                     >
@@ -217,10 +230,10 @@ const RegisterComponent = () => {
                   </CardFooter>
                 </form>
               </Form>
-              
+
               <div className="p-4 text-center text-sm">
                 Already have an account?{" "}
-                <a 
+                <a
                   href={`/login?role=${role}`}
                   className={`font-medium ${role === 'lecturer' ? 'text-school-secondary' : 'text-school-primary'} hover:underline`}
                 >

@@ -5,8 +5,8 @@ export const register = async (
   email: string,
   password: string,
   role: string
-) => {
-  await apiRequest("POST", `auth/${role}/register`, {
+): Promise<any> => {
+  return await apiRequest("POST", `auth/${role}/register`, {
     fullname,
     email,
     password,

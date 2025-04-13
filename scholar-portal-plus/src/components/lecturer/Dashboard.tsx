@@ -1,16 +1,31 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Calendar, Clock, Download, FileText, GraduationCap, ListChecks, User } from 'lucide-react';
-import { Progress } from '@/components/ui/progress';
-import { getCurrentUser } from '@/utils/authUtils';
+import { BookOpen, Calendar, FileText, GraduationCap, ListChecks, Loader, User } from 'lucide-react';
 import WelcomeDashboard from './WelcomeDashboard';
+import { api } from '@/api';
 
 const LecturerDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const user = getCurrentUser();
-  const isNewLecturer = user?.courses?.length === 0;
+  const [user, setUser] = useState(null);
+  const [isNewLecturer, setIsNewLecturer] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await api.getCurrentUser();
+        setUser(response.user);
+        setIsNewLecturer(true);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUser();
+  }, []);
+  if (!user) {
+    return <Loader />;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">

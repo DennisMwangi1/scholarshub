@@ -9,6 +9,15 @@ import apiRequest from "./lib/request";
  * @returns A promise that resolves when the login request is complete.
  */
 
-export const login = async (email: string, password: string, role: string) => {
-  await apiRequest("POST", `auth/${role}/login`, { email, password });
+export const login = async (
+  email: string,
+  password: string,
+  role: string,
+  otp: string | null = null
+) => {
+  return await apiRequest("POST", `auth/${role}/login`, {
+    email,
+    password,
+    otp,
+  });
 };

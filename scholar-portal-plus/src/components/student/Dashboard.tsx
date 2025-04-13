@@ -1,9 +1,9 @@
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { BookOpen, Calendar, Clock, Download, FileText, GraduationCap, ListChecks, User } from 'lucide-react';
+import { BookOpen, Calendar, Clock, Download, FileText, GraduationCap, ListChecks, Loader, User } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import CoursesOverview from './CoursesOverview';
 import CoursesRegistration from './CoursesRegistration';
@@ -11,13 +11,28 @@ import LearningMaterials from './LearningMaterials';
 import Timetable from './Timetable';
 import ResultsTranscripts from './ResultsTranscripts';
 import WelcomeDashboard from './WelcomeDashboard';
-import { getCurrentUser } from '@/utils/authUtils';
+import { api } from '@/api';
 
 const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
-  const user = getCurrentUser();
-  const isNewStudent = user?.courses?.length === 0;
+  const [user, setUser] = useState(null);
+  const [isNewStudent, setIsNewStudent] = useState(false);
 
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await api.getCurrentUser();
+        setUser(response.user);
+        setIsNewStudent(true);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUser();
+  }, []);
+  if (!user) {
+    return <Loader />;
+  }
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-6">
@@ -30,7 +45,7 @@ const StudentDashboard = () => {
                   <User className="h-12 w-12 text-school-primary" />
                 </div>
               </div>
-              <CardTitle>{user?.name || 'John Doe'}</CardTitle>
+              <CardTitle>{user.name}</CardTitle>
               <CardDescription>Student ID: {user?.studentId || 'ST123456'}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -45,7 +60,7 @@ const StudentDashboard = () => {
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Email</p>
-                  <p className="font-medium">{user?.email || 'john.doe@student.example.edu'}</p>
+                  <p className="font-medium">{user.email}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-500">Status</p>

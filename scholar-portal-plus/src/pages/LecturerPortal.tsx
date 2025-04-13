@@ -1,33 +1,34 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import LecturerDashboard from '@/components/lecturer/Dashboard';
-import { isAuthenticated, hasRole, getCurrentUser, logout } from '@/utils/authUtils';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { api } from '@/api';
 
 const LecturerPortal = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const user = getCurrentUser();
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // Check if user is authenticated and has lecturer role
-    const checkAuth = () => {
-      if (!isAuthenticated()) {
-        toast({
-          variant: "destructive",
-          title: "Authentication required",
-          description: "Please login to access the lecturer portal."
-        });
-        navigate('/login?role=lecturer');
-        return;
+    const fetchUser = async () => {
+      try {
+        const response = await api.getCurrentUser();
+        setUser(response.user);
+      } catch (error) {
+        console.error('Error fetching user:', error);
       }
+    };
+    fetchUser();
+  }, []);
 
-      if (!hasRole('lecturer')) {
+  useEffect(() => {
+    if (user === null) return;
+    const checkAuth = () => {
+
+      if (user.role !== 'lecturer') {
         toast({
           variant: "destructive",
           title: "Access denied",
@@ -41,10 +42,14 @@ const LecturerPortal = () => {
     };
 
     checkAuth();
-  }, [navigate, toast]);
+  }, [navigate, toast, user]);
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem('token');
+    toast({
+      title: "Logged out",
+      description: "You have been successfully logged out."
+    });
     navigate('/login?role=lecturer');
   };
 

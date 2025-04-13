@@ -1,21 +1,34 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import RegisterComponent from '@/components/auth/Register';
-import { isAuthenticated, hasRole } from '@/utils/authUtils';
 import { useToast } from '@/components/ui/use-toast';
+import { api } from '@/api';
 
 const Register = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const role = searchParams.get('role') || 'student';
   const { toast } = useToast();
+  const token = localStorage.getItem('token');
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
-    // If already authenticated, redirect to appropriate portal
-    if (isAuthenticated()) {
-      const isLecturer = hasRole('lecturer');
-      
+    const fetchUser = async () => {
+      try {
+        const response = await api.getCurrentUser();
+        setUser(response.user);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUser();
+  }, []);
+
+  useEffect(() => {
+    if (token && user) {
+      const isLecturer = user.role === 'lecturer';
+
       if (role === 'lecturer' && isLecturer) {
         toast({
           title: "Already logged in",
@@ -34,7 +47,7 @@ const Register = () => {
 
   return (
     <div>
-      <RegisterComponent />
+      <RegisterComponent role={role as 'student' | 'lecturer'} />
     </div>
   );
 };

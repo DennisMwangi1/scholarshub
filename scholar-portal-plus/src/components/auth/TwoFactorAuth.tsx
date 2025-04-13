@@ -1,46 +1,50 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/components/ui/use-toast';
 import { KeyRound } from 'lucide-react';
-import { verifyOtp } from '@/utils/authUtils';
 import { InputOTP, InputOTPGroup, InputOTPSlot } from '@/components/ui/input-otp';
+import { api } from '@/api';
 
 interface TwoFactorAuthProps {
   onSuccess: () => void;
   qrCodeUrl?: string;
+  mode: 'register' | 'login';
+  userData?: {
+    email: string,
+    password: string;
+  };
+  role: 'student' | 'lecturer';
 }
 
-const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess, qrCodeUrl }) => {
+const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess, qrCodeUrl, mode, userData, role }) => {
   const [otp, setOtp] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Convert the QR code URL to an actual image URL
-  const qrImageUrl = qrCodeUrl ? 
-    `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(qrCodeUrl)}` :
-    'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=otpauth://totp/ScholarPortal:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=ScholarPortal';
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     try {
-      // Use authUtils to verify OTP
-      const success = await verifyOtp(otp);
-      if (success) {
-        onSuccess();
+      // Only verify OTP in login mode
+      if (mode === 'login') {
+        const response = await api.login(userData.email, userData.password, role, otp);
+        if (response.token) {
+          localStorage.setItem('token', response.token);
+          onSuccess();
+        } else {
+          throw new Error("Invalid verification code");
+        }
       } else {
-        throw new Error("Invalid verification code");
+        onSuccess();
       }
     } catch (error: any) {
       toast({
         variant: "destructive",
         title: "Verification failed",
-        description: error.message || "Please enter a valid 6-digit code."
+        description: error.message || "Please enter a valid 6-digit code.",
       });
     } finally {
       setIsLoading(false);
@@ -59,15 +63,19 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess, qrCodeUrl }) =
             </div>
             <CardTitle className="text-2xl font-bold">Two-Factor Authentication</CardTitle>
             <CardDescription>
-              Scan the QR code with your authenticator app and enter the verification code
+              {mode === 'register'
+                ? 'Scan the QR code with your authenticator app to set up 2FA, then enter the code.'
+                : 'Enter the 6-digit code from your authenticator app to continue.'}
             </CardDescription>
           </CardHeader>
-          
+
           <CardContent className="space-y-4">
-            <div className="flex justify-center mb-4">
-              <img src={qrImageUrl} alt="QR Code" className="w-48 h-48" />
-            </div>
-            
+            {mode === 'register' && qrCodeUrl && (
+              <div className="flex justify-center mb-4">
+                <img src={qrCodeUrl} alt="QR Code" className="w-48 h-48" />
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="otp">Verification Code</Label>
@@ -82,22 +90,22 @@ const TwoFactorAuth: React.FC<TwoFactorAuthProps> = ({ onSuccess, qrCodeUrl }) =
                   </InputOTPGroup>
                 </InputOTP>
               </div>
-              
+
               <div className="text-sm text-gray-500">
                 <p>Don't have an authenticator app?</p>
                 <p>Download <a href="https://google.com" className="text-school-primary hover:underline" target="_blank" rel="noopener noreferrer">Google Authenticator</a> or <a href="https://authy.com" className="text-school-primary hover:underline" target="_blank" rel="noopener noreferrer">Authy</a>.</p>
               </div>
-              
-              <Button 
-                type="submit" 
+
+              <Button
+                type="submit"
                 className="w-full bg-school-accent text-school-primary hover:bg-school-accent/90"
                 disabled={isLoading}
               >
-                {isLoading ? 'Verifying...' : 'Verify Code'}
+                {isLoading ? (mode === 'login' ? 'Verifying...' : 'Setting up...') : (mode === 'login' ? 'Verify Code' : 'Complete Setup')}
               </Button>
             </form>
           </CardContent>
-          
+
           <CardFooter className="flex justify-center">
             <Button variant="link" className="text-school-primary hover:text-school-primary/80">
               Need help?

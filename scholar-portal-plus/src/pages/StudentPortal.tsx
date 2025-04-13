@@ -1,33 +1,33 @@
 
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import StudentDashboard from '@/components/student/Dashboard';
-import { isAuthenticated, hasRole, getCurrentUser, logout } from '@/utils/authUtils';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { api } from '@/api';
 
 const StudentPortal = () => {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
-  const user = getCurrentUser();
+  const [user, setUser] = useState(null);
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await api.getCurrentUser();
+        setUser(response.user);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   useEffect(() => {
-    // Check if user is authenticated and has student role
+    if (user === null) return;
     const checkAuth = () => {
-      if (!isAuthenticated()) {
-        toast({
-          variant: "destructive",
-          title: "Authentication required",
-          description: "Please login to access the student portal."
-        });
-        navigate('/login?role=student');
-        return;
-      }
 
-      if (!hasRole('student')) {
+      if (user.role !== 'student') {
         toast({
           variant: "destructive",
           title: "Access denied",
@@ -41,10 +41,10 @@ const StudentPortal = () => {
     };
 
     checkAuth();
-  }, [navigate, toast]);
+  }, [navigate, toast, user]);
 
   const handleLogout = () => {
-    logout();
+    localStorage.removeItem('token');
     toast({
       title: "Logged out",
       description: "You have been successfully logged out."
@@ -52,7 +52,7 @@ const StudentPortal = () => {
     navigate('/login?role=student');
   };
 
-  if (loading) {
+  if (loading || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
