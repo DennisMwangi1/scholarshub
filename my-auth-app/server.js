@@ -5,7 +5,7 @@ const cors = require( 'cors' );
 const authRoutes = require( './routes/auth' );
 const userRoutes = require( './routes/user' );
 const { corsConfig } = require( './cors/cors' );
-
+const db = require( './db' );
 
 const app = express();
 const PORT = process.env.PORT || 3000;

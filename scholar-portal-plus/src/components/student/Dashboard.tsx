@@ -17,13 +17,17 @@ const StudentDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [user, setUser] = useState(null);
   const [isNewStudent, setIsNewStudent] = useState(false);
-
+  console.log(user);
   useEffect(() => {
     const fetchUser = async () => {
       try {
         const response = await api.getCurrentUser();
+        console.log(response);
         setUser(response.user);
-        setIsNewStudent(true);
+        if (response.courses === 0) {
+          setIsNewStudent(true);
+
+        }
       } catch (error) {
         console.error('Error fetching user:', error);
       }
@@ -45,7 +49,7 @@ const StudentDashboard = () => {
                   <User className="h-12 w-12 text-school-primary" />
                 </div>
               </div>
-              <CardTitle>{user.name}</CardTitle>
+              <CardTitle>{user.fullname}</CardTitle>
               <CardDescription>Student ID: {user?.studentId || 'ST123456'}</CardDescription>
             </CardHeader>
             <CardContent>

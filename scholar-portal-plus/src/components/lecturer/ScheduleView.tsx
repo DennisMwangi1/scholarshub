@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar as CalendarIcon, Clock, MapPin, PlusCircle } from 'lucide-react';
-import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -91,7 +90,7 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ selectedCourse, onClearFilt
     // Format times for display
     const formattedStartTime = format(new Date(`2023-01-01T${newEvent.startTime}`), 'h:mm a');
     const formattedEndTime = format(new Date(`2023-01-01T${newEvent.endTime}`), 'h:mm a');
-    
+
     // In a real app, this would be an API call to create the event
     const newScheduleItem = {
       id: `S${Math.floor(Math.random() * 1000)}`,
@@ -130,12 +129,12 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ selectedCourse, onClearFilt
             <p className="text-gray-600">Filtered by: {selectedCourse}</p>
           )}
         </div>
-        
+
         <div className="mt-2 md:mt-0 flex gap-2">
           <Button variant="outline" onClick={onClearFilter}>
             {selectedCourse ? 'Show All' : 'All Courses'}
           </Button>
-          <Button 
+          <Button
             className="bg-school-secondary hover:bg-school-secondary/90"
             onClick={() => setIsAddEventDialogOpen(true)}
           >
@@ -144,18 +143,9 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ selectedCourse, onClearFilt
           </Button>
         </div>
       </div>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="md:col-span-1">
-          <CardContent className="p-4">
-            <Calendar
-              mode="single"
-              selected={selectedDate}
-              onSelect={setSelectedDate}
-              className="rounded-md border"
-            />
-          </CardContent>
-        </Card>
+
+      <div className="grid grid-cols-1  gap-6">
+
 
         <Card className="md:col-span-2">
           <CardContent className="p-4">
@@ -207,11 +197,11 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ selectedCourse, onClearFilt
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="event-course">Course</Label>
-              <select 
+              <select
                 id="event-course"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={newEvent.courseCode}
-                onChange={(e) => setNewEvent({...newEvent, courseCode: e.target.value})}
+                onChange={(e) => setNewEvent({ ...newEvent, courseCode: e.target.value })}
               >
                 <option value="" disabled>Select a course</option>
                 <option value="CS101">CS101 - Introduction to Computer Science</option>
@@ -222,11 +212,11 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ selectedCourse, onClearFilt
             </div>
             <div className="space-y-2">
               <Label htmlFor="event-title">Title</Label>
-              <Input 
-                id="event-title" 
-                placeholder="E.g., Lecture: Introduction to Variables" 
+              <Input
+                id="event-title"
+                placeholder="E.g., Lecture: Introduction to Variables"
                 value={newEvent.title}
-                onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
+                onChange={(e) => setNewEvent({ ...newEvent, title: e.target.value })}
               />
             </div>
             <div className="space-y-2">
@@ -241,39 +231,39 @@ const ScheduleView: React.FC<ScheduleViewProps> = ({ selectedCourse, onClearFilt
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="event-start">Start Time</Label>
-                <Input 
-                  id="event-start" 
-                  type="time" 
+                <Input
+                  id="event-start"
+                  type="time"
                   value={newEvent.startTime}
-                  onChange={(e) => setNewEvent({...newEvent, startTime: e.target.value})}
+                  onChange={(e) => setNewEvent({ ...newEvent, startTime: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="event-end">End Time</Label>
-                <Input 
-                  id="event-end" 
-                  type="time" 
+                <Input
+                  id="event-end"
+                  type="time"
                   value={newEvent.endTime}
-                  onChange={(e) => setNewEvent({...newEvent, endTime: e.target.value})}
+                  onChange={(e) => setNewEvent({ ...newEvent, endTime: e.target.value })}
                 />
               </div>
             </div>
             <div className="space-y-2">
               <Label htmlFor="event-location">Location</Label>
-              <Input 
-                id="event-location" 
-                placeholder="E.g., Room 101 or Computer Lab 3" 
+              <Input
+                id="event-location"
+                placeholder="E.g., Room 101 or Computer Lab 3"
                 value={newEvent.location}
-                onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
+                onChange={(e) => setNewEvent({ ...newEvent, location: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="event-type">Type</Label>
-              <select 
+              <select
                 id="event-type"
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                 value={newEvent.type}
-                onChange={(e) => setNewEvent({...newEvent, type: e.target.value})}
+                onChange={(e) => setNewEvent({ ...newEvent, type: e.target.value })}
               >
                 <option value="Lecture">Lecture</option>
                 <option value="Lab">Lab Session</option>

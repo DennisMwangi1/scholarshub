@@ -5,6 +5,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { BookOpen, Calendar, FileText, GraduationCap, ListChecks, Loader, User } from 'lucide-react';
 import WelcomeDashboard from './WelcomeDashboard';
 import { api } from '@/api';
+import CoursesOverview from './CoursesOverview';
+import MaterialsView from './MaterialsView';
+import ScheduleView from './ScheduleView';
+import GradingView from './GradingView';
 
 const LecturerDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -16,7 +20,10 @@ const LecturerDashboard = () => {
       try {
         const response = await api.getCurrentUser();
         setUser(response.user);
-        setIsNewLecturer(true);
+        console.log(response);
+        // if (response.courses) {
+        //   setIsNewLecturer(true);
+        // }
       } catch (error) {
         console.error('Error fetching user:', error);
       }
@@ -39,7 +46,7 @@ const LecturerDashboard = () => {
                   <User className="h-12 w-12 text-school-secondary" />
                 </div>
               </div>
-              <CardTitle>{user?.name || 'Dr. Jane Smith'}</CardTitle>
+              <CardTitle>{user?.fullname || 'Dr. Jane Smith'}</CardTitle>
               <CardDescription>Employee ID: {user?.employeeId || 'LC789012'}</CardDescription>
             </CardHeader>
             <CardContent>
@@ -109,7 +116,7 @@ const LecturerDashboard = () => {
               <TabsContent value="overview" className="pt-4">
                 <div>
                   <h2 className="text-2xl font-bold text-school-secondary mb-4">Courses Overview</h2>
-                  <p>Here you can see an overview of your courses.</p>
+                  <CoursesOverview onSelectCourse={() => { }} />
                 </div>
               </TabsContent>
 
@@ -117,7 +124,7 @@ const LecturerDashboard = () => {
               <TabsContent value="management" className="pt-4">
                 <div>
                   <h2 className="text-2xl font-bold text-school-secondary mb-4">Course Management</h2>
-                  <p>Manage your courses here.</p>
+
                 </div>
               </TabsContent>
 
@@ -125,7 +132,7 @@ const LecturerDashboard = () => {
               <TabsContent value="materials" className="pt-4">
                 <div>
                   <h2 className="text-2xl font-bold text-school-secondary mb-4">Learning Materials</h2>
-                  <p>Upload and manage learning materials for your courses.</p>
+                  <MaterialsView />
                 </div>
               </TabsContent>
 
@@ -133,7 +140,7 @@ const LecturerDashboard = () => {
               <TabsContent value="timetable" className="pt-4">
                 <div>
                   <h2 className="text-2xl font-bold text-school-secondary mb-4">Timetable</h2>
-                  <p>View your timetable here.</p>
+                  <ScheduleView />
                 </div>
               </TabsContent>
 
@@ -141,7 +148,7 @@ const LecturerDashboard = () => {
               <TabsContent value="results" className="pt-4">
                 <div>
                   <h2 className="text-2xl font-bold text-school-secondary mb-4">Results & Grading</h2>
-                  <p>Manage and submit grades for your students.</p>
+                  <GradingView />
                 </div>
               </TabsContent>
             </Tabs>
