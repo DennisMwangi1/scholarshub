@@ -1,14 +1,28 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, Calendar, FileText, UserPlus, GraduationCap, CheckCircle, Library, BadgeDollarSign, HelpCircle } from 'lucide-react';
-import { getCurrentUser } from '@/utils/authUtils';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { api } from '@/api';
 
 const WelcomeDashboard = () => {
-  const user = getCurrentUser();
+  const [user, setUser] = useState(null);
   const registrationDate = user?.registrationDate || 'Recently';
+  const navigate = useNavigate();
+
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await api.getCurrentUser();
+        setUser(response.user);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUser();
+  }, []);
 
   const onboardingSteps = [
     {
@@ -65,7 +79,7 @@ const WelcomeDashboard = () => {
       <div className="bg-gradient-to-r from-school-primary/20 to-school-accent/20 rounded-lg p-6">
         <h1 className="text-2xl font-bold text-school-primary mb-2">Welcome to Scholar Portal!</h1>
         <p className="text-gray-700">
-          Congratulations on joining us! You registered on {registrationDate}. 
+          Congratulations on joining us! You registered on {registrationDate}.
           Let's get you started with everything you need for a successful academic journey.
         </p>
       </div>
@@ -103,9 +117,9 @@ const WelcomeDashboard = () => {
           <CardContent className="space-y-4">
             <div className="grid gap-2">
               {studentResources.map((resource, index) => (
-                <Button 
+                <Button
                   key={index}
-                  variant="outline" 
+                  variant="outline"
                   className="justify-start"
                   asChild
                 >

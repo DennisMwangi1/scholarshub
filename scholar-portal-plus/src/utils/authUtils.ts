@@ -26,8 +26,8 @@ const users: Record<string, User> = {
   "student@example.com": {
     id: "ST123456",
     role: "student",
-    name: "John Doe",
-    email: "student@example.com",
+    name: "Shirlene",
+    email: "shirlene@kca.com",
     registrationDate: "2023-09-01",
     department: "Computer Science",
     studentId: "ST123456",
@@ -36,8 +36,8 @@ const users: Record<string, User> = {
   "lecturer@example.com": {
     id: "LC789012",
     role: "lecturer",
-    name: "Dr. Jane Smith",
-    email: "lecturer@example.com",
+    name: "Dr. Mwangi",
+    email: "mwangi@kca.com",
     registrationDate: "2022-01-15",
     department: "Computer Science",
     employeeId: "LC789012",

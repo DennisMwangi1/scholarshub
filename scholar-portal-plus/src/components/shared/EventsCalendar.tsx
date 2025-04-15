@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar as CalendarIcon, Clock, MapPin } from 'lucide-react';
 import { format } from 'date-fns';
-import { Calendar } from '@/components/ui/calendar';
 
 interface Event {
   id: string;
@@ -85,25 +84,25 @@ const categoryColors: Record<string, string> = {
 const EventsCalendar = () => {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTab, setSelectedTab] = useState('upcoming');
-  
+
   const today = new Date();
-  
+
   const upcomingEvents = events
     .filter(event => event.date >= today)
     .sort((a, b) => a.date.getTime() - b.date.getTime());
-  
+
   const pastEvents = events
     .filter(event => event.date < today)
     .sort((a, b) => b.date.getTime() - a.date.getTime());
-    
+
   const daysWithEvents = events.map(event => event.date);
-  
-  const selectedDateEvents = date 
-    ? events.filter(event => 
-        event.date.getDate() === date.getDate() &&
-        event.date.getMonth() === date.getMonth() &&
-        event.date.getFullYear() === date.getFullYear()
-      )
+
+  const selectedDateEvents = date
+    ? events.filter(event =>
+      event.date.getDate() === date.getDate() &&
+      event.date.getMonth() === date.getMonth() &&
+      event.date.getFullYear() === date.getFullYear()
+    )
     : [];
 
   return (
@@ -115,102 +114,14 @@ const EventsCalendar = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Calendar */}
-        <Card className="lg:col-span-1">
-          <CardHeader>
-            <CardTitle>Calendar</CardTitle>
-            <CardDescription>
-              {date ? format(date, 'MMMM yyyy') : 'Select a date'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="rounded-md border"
-              modifiers={{
-                highlighted: daysWithEvents.map(date => new Date(date))
-              }}
-              modifiersStyles={{
-                highlighted: { fontWeight: 'bold', backgroundColor: 'rgba(0, 120, 255, 0.1)' }
-              }}
-            />
-          </CardContent>
-        </Card>
 
-        {/* Events List */}
-        <Card className="lg:col-span-2">
-          <CardHeader className="px-6">
-            <div className="flex justify-between items-center">
-              <CardTitle>Events</CardTitle>
-              <Tabs value={selectedTab} onValueChange={setSelectedTab} defaultValue={selectedTab}>
-                <TabsList>
-                  <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
-                  <TabsTrigger value="today">Today</TabsTrigger>
-                  <TabsTrigger value="past">Past</TabsTrigger>
-                </TabsList>
-              
-                <TabsContent value="upcoming">
-                  {upcomingEvents.length > 0 ? (
-                    <div className="space-y-5">
-                      {upcomingEvents.map((event) => (
-                        <EventCard key={event.id} event={event} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <CalendarIcon className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                      <p>No upcoming events scheduled</p>
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="today">
-                  {selectedDateEvents.length > 0 ? (
-                    <div className="space-y-5">
-                      {selectedDateEvents.map((event) => (
-                        <EventCard key={event.id} event={event} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <CalendarIcon className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                      <p>No events for {date ? format(date, 'MMMM d, yyyy') : 'selected date'}</p>
-                    </div>
-                  )}
-                </TabsContent>
-                
-                <TabsContent value="past">
-                  {pastEvents.length > 0 ? (
-                    <div className="space-y-5">
-                      {pastEvents.map((event) => (
-                        <EventCard key={event.id} event={event} />
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-gray-500">
-                      <CalendarIcon className="h-12 w-12 mx-auto text-gray-300 mb-3" />
-                      <p>No past events</p>
-                    </div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </CardHeader>
-          <CardContent className="px-6 pb-6">
-            {/* The TabsContent has been moved inside the Tabs component above */}
-          </CardContent>
-        </Card>
-      </div>
     </div>
   );
 };
 
-const EventCard = ({ event }: { event: Event }) => {
+const EventCard = ({ event }: { event: Event; }) => {
   const colorClass = categoryColors[event.category] || 'bg-gray-100 text-gray-800';
-  
+
   return (
     <Card className="hover:shadow-md transition-shadow border-l-4 border-l-school-primary">
       <CardContent className="p-5">
@@ -223,9 +134,9 @@ const EventCard = ({ event }: { event: Event }) => {
             {event.category}
           </span>
         </div>
-        
+
         <p className="text-gray-600 mb-4">{event.description}</p>
-        
+
         <div className="flex flex-col sm:flex-row gap-4 text-sm text-gray-500">
           <div className="flex items-center">
             <Clock className="h-4 w-4 mr-1 text-school-secondary" />

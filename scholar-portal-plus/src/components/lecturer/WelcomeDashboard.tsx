@@ -1,15 +1,31 @@
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { BookOpen, Calendar, FileText, UserPlus, GraduationCap, CheckCircle, Plus, Settings, Users, Wifi } from 'lucide-react';
-import { getCurrentUser } from '@/utils/authUtils';
+import { BookOpen, Calendar, FileText, UserPlus, GraduationCap, CheckCircle, Plus, Settings, Users, Wifi, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { api } from '@/api';
 
 const WelcomeDashboard = () => {
-  const user = getCurrentUser();
+  const [user, setUser] = useState(null);
   const registrationDate = user?.registrationDate || 'Recently';
   const navigate = useNavigate();
+
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await api.getCurrentUser();
+        setUser(response.user);
+      } catch (error) {
+        console.error('Error fetching user:', error);
+      }
+    };
+    fetchUser();
+  }, []);
+  if (!user) {
+    return <Loader />;
+  }
 
   const onboardingSteps = [
     {
@@ -43,7 +59,7 @@ const WelcomeDashboard = () => {
       <div className="bg-gradient-to-r from-school-secondary/20 to-school-accent/20 rounded-lg p-6">
         <h1 className="text-2xl font-bold text-school-secondary mb-2">Welcome to the Faculty Portal!</h1>
         <p className="text-gray-700">
-          We're delighted to have you join our academic team! You registered on {registrationDate}. 
+          We're delighted to have you join our academic team! You registered on {registrationDate}.
           Let's get you set up with everything you need to begin your teaching journey.
         </p>
       </div>
@@ -80,40 +96,40 @@ const WelcomeDashboard = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-2">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="justify-start"
                 onClick={() => navigate('/lecturer-resources/handbook')}
               >
                 <BookOpen className="mr-2 h-4 w-4" />
                 Faculty Handbook
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="justify-start"
                 onClick={() => navigate('/lecturer-resources/research-guidelines')}
               >
                 <FileText className="mr-2 h-4 w-4" />
                 Research Guidelines
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="justify-start"
                 onClick={() => navigate('/lecturer-resources/teaching-resources')}
               >
                 <BookOpen className="mr-2 h-4 w-4" />
                 Teaching Resources
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="justify-start"
                 onClick={() => navigate('/lecturer-resources/department-contacts')}
               >
                 <Users className="mr-2 h-4 w-4" />
                 Department Contacts
               </Button>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 className="justify-start"
                 onClick={() => navigate('/lecturer-resources/it-services')}
               >
